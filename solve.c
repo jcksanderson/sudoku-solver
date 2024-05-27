@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "solve.h"
 
 uint16_t number_bit(char num)
 {

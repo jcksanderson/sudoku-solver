@@ -1,7 +1,10 @@
 .PHONY: clean
 
-solve: sudoku_solve.c
-	clang -Wall -g -o solve sudoku_solve.c
+solve: solve.c
+	clang -Wall -g -o solve solve.c
+
+test: test_solve.c
+	clang -o test -Wall solve.c test_solve.c -lm -lcriterion
 
 clean:
-	rm -r solve solve.dSYM
+	rm -r solve solve.dSYM test test.dSYM
