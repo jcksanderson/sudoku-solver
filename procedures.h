@@ -13,3 +13,5 @@ typedef struct sudoku_game sudoku_game;
 void read_board(FILE *f, sudoku_game game);
 
 uint8_t *generate_options(uint16_t possible, uint8_t *len);
+
+int solve_board(sudoku_game game);

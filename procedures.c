@@ -83,22 +83,38 @@ int solve_board(sudoku_game game)
 		for (int j = 0; j < 9; j++) {
 			if (game.board[i][j] != 0) continue;
 			// square is definitely empty
+			int sqr = (i/3) + (j/3);
 			uint16_t possible = ~(game.rows[i] | game.cols[j] | 
-														game.squares[(i/3) + (j/3)]);
+														game.squares[sqr]);
 			// need to turn this into numbers to try
 			// then loop through those
 			uint8_t len = 0;
 			uint8_t *opts = generate_options(possible, &len);
+			if (len == 1 && i == 9 && j == 9) return 1; // success
 			if (!len) return 0; // options failed
 
 			uint16_t row_bkp = game.rows[i];
 			uint16_t col_bkp = game.cols[j];
-			uint16_t sqr_bkp = game.squares[(i/3) + (j/3)];
+			uint16_t sqr_bkp = game.squares[sqr];
 
-			for (int i = 0; i < len; i++) {
+			for (int k = 0; i < len; i++) {
 				// update game piece
 				// update rows, cols, and squares
 				// pass to next function call
+				game.board[i][j] = opts[k];
+				game.rows[i] |= (1 << opts[k]);
+				game.cols[j] |= (1 << opts[k]);
+				game.squares[sqr] |= (1 << opts[k]);
+
+				if (!solve_board(game)) {
+					// reset rows, cols, squares
+					// continue
+					game.rows[i] = row_bkp;
+					game.cols[j] = col_bkp;
+					game.squares[sqr] = sqr_bkp;
+					continue;
+				}
+				return 1;
 			}
 		}
 	}

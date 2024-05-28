@@ -11,19 +11,24 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *f = fopen(argv[1], "r");
-	// do the magic
-	uint16_t *rows = malloc(sizeof(uint16_t) * 9);
-	uint16_t *cols = malloc(sizeof(uint16_t) * 9);
-	uint16_t *squares= malloc(sizeof(uint16_t) * 9);
-	read_board(f, rows, cols, squares);
-	
-	printf("\n");
+	sudoku_game game;
+	game.rows = malloc(sizeof(uint16_t) * 9);
+	game.cols = malloc(sizeof(uint16_t) * 9);
+	game.squares = malloc(sizeof(uint16_t) * 9);
+	game.board = malloc(sizeof(uint8_t *) * 9);
 	for (int i = 0; i < 9; i++) {
-		printf("col %d: 0x%x\n", i, cols[i]);
-		printf("row %d: 0x%x\n", i, rows[i]);
-		printf("square  %d: 0x%x\n\n", i, squares[i]);
+		game.board[i] = malloc(sizeof(uint8_t) * 9);
 	}
 
+	read_board(f, game);
 	fclose(f);
+
+	solve_board(game);
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			printf("%d", game.board[i][j]); 
+		}
+		printf("\n");
+	}
 	return 0;
 }
