@@ -3,7 +3,7 @@
 #include <criterion/criterion.h>
 #include "procedures.h"
 
-Test(solve_read, read00)
+Test(procedures_read, read00)
 {
 	FILE *f = fopen("board.txt", "r");
 	sudoku_game game;
@@ -51,4 +51,32 @@ Test(solve_read, read00)
 		free(game.board[i]);
 	}
 	free(game.board);
+}
+
+// ===== Possible Value Generation ===
+
+Test(procedures_gen, gen00)
+{
+	uint16_t possible = 0x1FF;
+	uint8_t len;
+	uint8_t *opts = generate_options(possible, &len);
+	cr_assert(len == 9);
+	uint8_t exp[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	for (int i = 0; i < len; i++) {
+		cr_assert(opts[i] == exp[i]);
+	}
+	free(opts);
+}
+
+Test(procedures_gen, gen01)
+{
+	uint16_t possible = 0x19A;
+	uint8_t len;
+	uint8_t *opts = generate_options(possible, &len);
+	cr_assert(len == 5);
+	uint8_t exp[] = {2, 4, 5, 8, 9};
+	for (int i = 0; i < len; i++) {
+		cr_assert(opts[i] == exp[i]);
+	}
+	free(opts);
 }

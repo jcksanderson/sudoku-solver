@@ -81,34 +81,36 @@ int solve_board(sudoku_game game)
 {
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
+			// skip if already filled
 			if (game.board[i][j] != 0) continue;
-			// square is definitely empty
-			int sqr = (i/3) + (j/3);
-			uint16_t possible = ~(game.rows[i] | game.cols[j] | 
-														game.squares[sqr]);
-			// need to turn this into numbers to try
-			// then loop through those
+			// calculate the "inner square"
+			int sqr = 3 * (i/3) + (j/3);
+			uint16_t possible = (0x1FF & ~(game.rows[i] | game.cols[j] | 
+														game.squares[sqr]));
+
+			fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
+			fprintf(stderr, "possible num: 0x%x\n", possible);
+
 			uint8_t len = 0;
 			uint8_t *opts = generate_options(possible, &len);
-			if (len == 1 && i == 9 && j == 9) return 1; // success
-			if (!len) return 0; // options failed
+			fprintf(stderr, "possible vals: %d\n", len);
 
 			uint16_t row_bkp = game.rows[i];
 			uint16_t col_bkp = game.cols[j];
 			uint16_t sqr_bkp = game.squares[sqr];
 
-			for (int k = 0; i < len; i++) {
-				// update game piece
-				// update rows, cols, and squares
-				// pass to next function call
-				game.board[i][j] = opts[k];
-				game.rows[i] |= (1 << opts[k]);
-				game.cols[j] |= (1 << opts[k]);
-				game.squares[sqr] |= (1 << opts[k]);
+			// iterate through options
+			for (int k = 0; k < len; k++) {
+				fprintf(stderr, "Loc: (%d, %d) | Opt: %d\n\n", i, j, opts[k]);
 
-				if (!solve_board(game)) {
-					// reset rows, cols, squares
-					// continue
+				game.board[i][j] = opts[k];
+				game.rows[i] += number_bit(opts[k] + 48); 
+				game.cols[j] += number_bit(opts[k] + 48);	
+				game.squares[sqr] += number_bit(opts[k] + 48);
+
+				int status = solve_board(game);
+
+				if (!status) {
 					game.rows[i] = row_bkp;
 					game.cols[j] = col_bkp;
 					game.squares[sqr] = sqr_bkp;
@@ -116,7 +118,13 @@ int solve_board(sudoku_game game)
 				}
 				return 1;
 			}
+			// if we iterated through all options and didn't succeed
+			// or if no options, we failed (return 0, reset position)
+			game.board[i][j] = 0;
+			return 0;
 		}
 	}
+	// if we've dealt with the full board, success
+	return 1;
 }
 
