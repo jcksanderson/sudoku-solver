@@ -49,14 +49,16 @@ void read_board(FILE *f, sudoku_game game)
 	}
 }
 
-// have to figure out how to do this brute force technique
-// write function for determining the possible values at a square
-// iterate through those values
-// go to the next open square, determine the possible values
-// iterate through those values
-// etc.
-
-// right now the problem is how exactly i find out if a value doesn't work
+void free_game(sudoku_game game)
+{
+	free(game.rows);
+	free(game.cols);
+	free(game.squares);
+	for (int i = 0; i < 9; i++) {
+		free(game.board[i]);
+	}
+	free(game.board);
+}
 
 uint8_t *generate_options(uint16_t possible, uint8_t *len)
 {
@@ -88,12 +90,13 @@ int solve_board(sudoku_game game)
 			uint16_t possible = (0x1FF & ~(game.rows[i] | game.cols[j] | 
 														game.squares[sqr]));
 
-			fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
-			fprintf(stderr, "possible num: 0x%x\n", possible);
+			// fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
+			// fprintf(stderr, "possible num: 0x%x\n", possible);
 
 			uint8_t len = 0;
 			uint8_t *opts = generate_options(possible, &len);
-			fprintf(stderr, "possible vals: %d\n", len);
+
+			// fprintf(stderr, "possible vals: %d\n", len);
 
 			uint16_t row_bkp = game.rows[i];
 			uint16_t col_bkp = game.cols[j];
@@ -101,7 +104,7 @@ int solve_board(sudoku_game game)
 
 			// iterate through options
 			for (int k = 0; k < len; k++) {
-				fprintf(stderr, "Loc: (%d, %d) | Opt: %d\n\n", i, j, opts[k]);
+				// fprintf(stderr, "Loc: (%d, %d) | Opt: %d\n\n", i, j, opts[k]);
 
 				game.board[i][j] = opts[k];
 				game.rows[i] += number_bit(opts[k] + 48); 
@@ -128,3 +131,54 @@ int solve_board(sudoku_game game)
 	return 1;
 }
 
+int solve_board_fast(sudoku_game game, uint8_t row, uint8_t col)
+{
+	for (int i = row; i < 9; i++) {
+		for (int j = col; j < 9; j++) {
+			// skip if already filled
+			if (game.board[i][j] != 0) continue;
+			// calculate the "inner square"
+			int sqr = 3 * (i/3) + (j/3);
+			// get bit number of possible values
+			uint16_t possible = (0x1FF & ~(game.rows[i] | game.cols[j] | 
+														game.squares[sqr]));
+
+			// fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
+			// fprintf(stderr, "possible num: 0x%x\n", possible);
+
+			uint8_t len = 0;
+			uint8_t *opts = generate_options(possible, &len);
+
+			// fprintf(stderr, "possible vals: %d\n", len);
+
+			// iterate through options
+			for (int k = 0; k < len; k++) {
+				// fprintf(stderr, "Loc: (%d, %d) | Opt: %d\n\n", i, j, opts[k]);
+				uint16_t bit = number_bit(opts[k] + 48);
+				game.board[i][j] = opts[k];
+				game.rows[i] += bit;
+				game.cols[j] += bit;
+				game.squares[sqr] += bit;
+
+				int status = solve_board_fast(game, i, j);
+
+				if (!status) {
+					game.rows[i] -= bit;
+					game.cols[j] -= bit;
+					game.squares[sqr] -= bit;
+					continue;
+				}
+				return 1;
+			}
+			// if we iterated through all options and didn't succeed
+			// or if no options, we failed (return 0, reset position)
+			game.board[i][j] = 0;
+			return 0;
+		}
+		// reset col so that it starts the next row at 0 and 
+		// not wherever this call started
+		col = 0;
+	}
+	// if we've dealt with the full board, success
+	return 1;
+}

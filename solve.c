@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/time.h>
 #include "procedures.h"
 
 int main(int argc, char *argv[])
@@ -11,22 +12,51 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *f = fopen(argv[1], "r");
-	sudoku_game game;
-	game.rows = malloc(sizeof(uint16_t) * 9);
-	game.cols = malloc(sizeof(uint16_t) * 9);
-	game.squares = malloc(sizeof(uint16_t) * 9);
-	game.board = malloc(sizeof(uint8_t *) * 9);
+	sudoku_game game_1;
+	sudoku_game game_2;
+	game_1.rows = malloc(sizeof(uint16_t) * 9);
+	game_1.cols = malloc(sizeof(uint16_t) * 9);
+	game_1.squares = malloc(sizeof(uint16_t) * 9);
+	game_1.board = malloc(sizeof(uint8_t *) * 9);
 	for (int i = 0; i < 9; i++) {
-		game.board[i] = malloc(sizeof(uint8_t) * 9);
+		game_1.board[i] = malloc(sizeof(uint8_t) * 9);
+	}
+	game_2.rows = malloc(sizeof(uint16_t) * 9);
+	game_2.cols = malloc(sizeof(uint16_t) * 9);
+	game_2.squares = malloc(sizeof(uint16_t) * 9);
+	game_2.board = malloc(sizeof(uint8_t *) * 9);
+	for (int i = 0; i < 9; i++) {
+		game_2.board[i] = malloc(sizeof(uint8_t) * 9);
 	}
 
-	read_board(f, game);
+	read_board(f, game_1);
+	rewind(f);
+	read_board(f, game_2);
 	fclose(f);
 
-	solve_board(game);
+	struct timeval start;
+	struct timeval stop;
+
+	gettimeofday(&start, NULL);
+	solve_board(game_1);
+	gettimeofday(&stop, NULL);
+
+	unsigned long int t0 = start.tv_sec * 1000000 + start.tv_usec;
+	unsigned long int t1 = stop.tv_sec * 1000000 + stop.tv_usec;
+	fprintf(stderr, "slow solving time (usec): %lu\n", t1-t0);
+
+
+	gettimeofday(&start, NULL);
+	solve_board_fast(game_2, 0, 0);
+	gettimeofday(&stop, NULL);
+
+	unsigned long int t2 = start.tv_sec * 1000000 + start.tv_usec;
+	unsigned long int t3 = stop.tv_sec * 1000000 + stop.tv_usec;
+	fprintf(stderr, "fast solving time (usec): %lu\n", t3-t2);
+
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
-			printf("%d", game.board[i][j]); 
+			printf("%d", game_2.board[i][j]); 
 		}
 		printf("\n");
 	}

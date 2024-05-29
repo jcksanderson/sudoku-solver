@@ -3,9 +3,11 @@
 #include <criterion/criterion.h>
 #include "procedures.h"
 
+// ===== Read Board Tests =====
+
 Test(procedures_read, read00)
 {
-	FILE *f = fopen("board.txt", "r");
+	FILE *f = fopen("boards/board-1.txt", "r");
 	sudoku_game game;
 
 	game.rows = malloc(sizeof(uint16_t) * 9);
@@ -43,17 +45,12 @@ Test(procedures_read, read00)
 		cr_assert(game.cols[i] == col_exp[i]);
 		cr_assert(game.squares[i] == sqr_exp[i]);
 	}
-
-	free(game.rows);
-	free(game.cols);
-	free(game.squares);
-	for (int i = 0; i < 9; i++) {
-		free(game.board[i]);
-	}
-	free(game.board);
+	
+	free_game(game);
 }
 
-// ===== Possible Value Generation ===
+
+// ===== Possible Value Generation =====
 
 Test(procedures_gen, gen00)
 {
@@ -79,4 +76,76 @@ Test(procedures_gen, gen01)
 		cr_assert(opts[i] == exp[i]);
 	}
 	free(opts);
+}
+
+// ===== Board Solving =====
+
+Test(procedures_solve, solve00)
+{
+	FILE *f = fopen("boards/board-1.txt", "r");
+	sudoku_game game;
+
+	game.rows = malloc(sizeof(uint16_t) * 9);
+	game.cols = malloc(sizeof(uint16_t) * 9);
+	game.squares= malloc(sizeof(uint16_t) * 9);
+	game.board = malloc(sizeof(uint8_t *) * 9);
+	for (int i = 0; i < 9; i++) {
+		game.board[i] = malloc(sizeof(uint8_t) * 9);
+	}
+	read_board(f, game);
+
+	solve_board(game);
+
+	uint8_t solved_board[9][9] = {
+		{4, 8, 3, 9, 2, 1, 6, 5, 7},
+		{9, 6, 7, 3, 4, 5, 8, 2, 1},
+		{2, 5, 1, 8, 7, 6, 4, 9, 3},
+		{5, 4, 8, 1, 3, 2, 9, 7, 6},
+		{7, 2, 9, 5, 6, 4, 1, 3, 8},
+		{1, 3, 6, 7, 9, 8, 2, 4, 5},
+		{3, 7, 2, 6, 8, 9, 5, 1, 4},
+		{8, 1, 4, 2, 5, 3, 7, 6, 9},
+		{6, 9, 5, 4, 1, 7, 3, 8, 2}
+	};
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			cr_assert(game.board[i][j] == solved_board[i][j]);
+		}
+	}
+	free_game(game);
+}
+
+Test(procedures_solve, solve01)
+{
+	FILE *f = fopen("boards/board-2.txt", "r");
+	sudoku_game game;
+
+	game.rows = malloc(sizeof(uint16_t) * 9);
+	game.cols = malloc(sizeof(uint16_t) * 9);
+	game.squares= malloc(sizeof(uint16_t) * 9);
+	game.board = malloc(sizeof(uint8_t *) * 9);
+	for (int i = 0; i < 9; i++) {
+		game.board[i] = malloc(sizeof(uint8_t) * 9);
+	}
+
+	read_board(f, game);
+	solve_board(game);
+
+	uint8_t solved_board[9][9] = {
+		{2,4,5,9,8,1,3,7,6},
+		{1,6,9,2,7,3,5,8,4},
+		{8,3,7,5,6,4,2,1,9},
+		{9,7,6,1,2,5,4,3,8},
+		{5,1,3,4,9,8,6,2,7},
+		{4,8,2,7,3,6,9,5,1},
+		{3,9,1,6,5,7,8,4,2},
+		{7,2,8,3,4,9,1,6,5},
+		{6,5,4,8,1,2,7,9,3}
+	};
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			cr_assert(game.board[i][j] == solved_board[i][j]);
+		}
+	}
+	free_game(game);
 }
