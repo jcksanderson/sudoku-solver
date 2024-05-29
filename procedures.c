@@ -143,12 +143,11 @@ int solve_board_fast(sudoku_game game, uint8_t row, uint8_t col)
 			uint16_t possible = (0x1FF & ~(game.rows[i] | game.cols[j] | 
 														game.squares[sqr]));
 
-			// fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
-			// fprintf(stderr, "possible num: 0x%x\n", possible);
-
 			uint8_t len = 0;
 			uint8_t *opts = generate_options(possible, &len);
 
+			// fprintf(stderr, "checking pos (%d, %d) sqr: %d\n", i, j, sqr);
+			// fprintf(stderr, "possible num: 0x%x\n", possible);
 			// fprintf(stderr, "possible vals: %d\n", len);
 
 			// iterate through options
@@ -161,13 +160,15 @@ int solve_board_fast(sudoku_game game, uint8_t row, uint8_t col)
 				game.squares[sqr] += bit;
 
 				int status = solve_board_fast(game, i, j);
-
+				
+				// if we received a fail, try the next number
 				if (!status) {
 					game.rows[i] -= bit;
 					game.cols[j] -= bit;
 					game.squares[sqr] -= bit;
 					continue;
 				}
+				// if we received success, propogate the success down
 				return 1;
 			}
 			// if we iterated through all options and didn't succeed

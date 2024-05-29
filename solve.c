@@ -11,9 +11,11 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	// open file
 	FILE *f = fopen(argv[1], "r");
 	sudoku_game game_1;
 	sudoku_game game_2;
+	// initialize game arrays
 	game_1.rows = malloc(sizeof(uint16_t) * 9);
 	game_1.cols = malloc(sizeof(uint16_t) * 9);
 	game_1.squares = malloc(sizeof(uint16_t) * 9);
@@ -30,6 +32,7 @@ int main(int argc, char *argv[])
 	}
 
 	read_board(f, game_1);
+	// reset the file pointer
 	rewind(f);
 	read_board(f, game_2);
 	fclose(f);
@@ -37,6 +40,7 @@ int main(int argc, char *argv[])
 	struct timeval start;
 	struct timeval stop;
 
+	// time slow solve
 	gettimeofday(&start, NULL);
 	solve_board(game_1);
 	gettimeofday(&stop, NULL);
@@ -45,7 +49,7 @@ int main(int argc, char *argv[])
 	unsigned long int t1 = stop.tv_sec * 1000000 + stop.tv_usec;
 	fprintf(stderr, "slow solving time (usec): %lu\n", t1-t0);
 
-
+	// time fast solve
 	gettimeofday(&start, NULL);
 	solve_board_fast(game_2, 0, 0);
 	gettimeofday(&stop, NULL);
@@ -54,11 +58,15 @@ int main(int argc, char *argv[])
 	unsigned long int t3 = stop.tv_sec * 1000000 + stop.tv_usec;
 	fprintf(stderr, "fast solving time (usec): %lu\n", t3-t2);
 
+	// print result
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
 			printf("%d", game_2.board[i][j]); 
 		}
 		printf("\n");
 	}
+
+	// See about a 50 microsecond speedup on average with the fast solve
+
 	return 0;
 }
