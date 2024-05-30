@@ -218,6 +218,7 @@ int solve_board_fastest(sudoku_game game)
 			}
 		}
 	}
+	// if we didn't find a tile that had any options, then the puzzle is solved
 	if (curr_min == 10) return 1;
 	
 	uint8_t i = idx[0]; 
