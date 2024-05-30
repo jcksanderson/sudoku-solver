@@ -19,3 +19,7 @@ uint8_t *generate_options(uint16_t possible, uint8_t *len);
 int solve_board(sudoku_game game);
 
 int solve_board_fast(sudoku_game game, uint8_t row, uint8_t col);
+
+uint8_t possible_options(uint16_t possible);
+
+int solve_board_fastest(sudoku_game game);

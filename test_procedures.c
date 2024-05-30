@@ -149,3 +149,20 @@ Test(procedures_solve, solve01)
 	}
 	free_game(game);
 }
+
+
+// ===== Possible Options Testing ======
+
+Test(procedures_poss, poss00)
+{
+	uint16_t possible = 0x1FF;
+	uint8_t num_opts = possible_options(possible);
+	cr_assert(num_opts == 9);
+}	
+
+Test(procedures_poss, poss01)
+{
+	uint16_t possible = 0x1C8;
+	uint8_t num_opts = possible_options(possible);
+	cr_assert(num_opts == 4);
+}

@@ -183,3 +183,69 @@ int solve_board_fast(sudoku_game game, uint8_t row, uint8_t col)
 	// if we've dealt with the full board, success
 	return 1;
 }
+
+
+uint8_t possible_options(uint16_t possible)
+{
+	int options = 0;
+	for (int i = '1'; i <= '9'; i++) {
+		if (possible & number_bit(i)) options++;
+	}
+	return options;
+}
+
+// we can make solving a lot faster by choosing the tile with the fewest
+// options first.
+int solve_board_fastest(sudoku_game game)
+{
+	uint8_t idx[2] = {0};
+	uint8_t curr_min = 10;
+	uint16_t min_poss = 0x1FF;
+
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			if (game.board[i][j] != 0) continue;
+			int sqr = 3 * (i/3) + (j/3);
+
+			uint16_t possible = (0x1FF & ~(game.rows[i] | game.cols[j] |
+													 game.squares[sqr]));
+			if (possible == 0) return 0;
+			uint8_t num_opts = possible_options(possible);
+			if (num_opts < curr_min) {
+				curr_min = num_opts;
+				idx[0] = i; idx[1] = j;
+				min_poss = possible;
+			}
+		}
+	}
+	if (curr_min == 10) return 1;
+	
+	uint8_t i = idx[0]; 
+	uint8_t j = idx[1];
+	int sqr = 3 * (idx[0]/3) + (idx[1]/3);
+	uint8_t len = 0;
+	uint8_t *opts = generate_options(min_poss, &len);
+	
+	for (int k = 0; k < len; k++) {
+		// fprintf(stderr, "Loc: (%d, %d) | Opt: %d\n\n", i, j, opts[k]);
+		uint16_t bit = number_bit(opts[k] + 48);
+		game.board[i][j] = opts[k];
+		game.rows[i] += bit;
+		game.cols[j] += bit;
+		game.squares[sqr] += bit;
+
+		int status = solve_board_fastest(game);
+				
+		// if we received a fail, try the next number
+		if (!status) {
+			game.rows[idx[0]] -= bit;
+			game.cols[idx[1]] -= bit;
+			game.squares[sqr] -= bit;
+			continue;
+		}
+		// if we received success, propogate the success down
+		return 1;
+	}
+	game.board[i][j] = 0;
+	return 0;
+}
